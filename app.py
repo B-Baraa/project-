@@ -609,10 +609,7 @@ with tab_bigdata:
         unsafe_allow_html=True,
     )
 
-    st.info(
-        "Cette partie reprend les concepts présentés dans votre notebook : "
-        "HDFS simulé, partitionnement, réplication et traitement PySpark."
-    )
+    
 
     # Exact values from the project
     workers = 4
@@ -702,10 +699,7 @@ Dashboard Streamlit""",
         hide_index=True,
     )
 
-    st.warning(
-        "Important : ce projet simule un cluster Big Data sur une seule machine. "
-        "Les 4 workers et la réplication ne correspondent pas à 4 machines physiques "
-        "ou à un vrai cluster HDFS."
+    
     )
 
 # ============================================================
