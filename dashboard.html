@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cluster Big Data — Ventes Retail 2024</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖧</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #0A121E;
+    --bg-2: #0D1A2B;
+    --panel: #111E31;
+    --panel-2: #14263C;
+    --border: #22374F;
+    --text: #E7EEF5;
+    --muted: #8CA3B8;
+    --muted-2: #5E7690;
+    --cyan: #2DD4E8;
+    --cyan-dim: #1A6E7D;
+    --amber: #FDB34E;
+    --green: #3ED598;
+    --red: #FF6B6B;
+    --violet: #9B8CFF;
+    --font-head: 'Space Grotesk', 'Segoe UI', Arial, sans-serif;
+    --font-body: 'Inter', 'Segoe UI', Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; background: var(--bg); color: var(--text);
+    font-family: var(--font-body);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+
+  body{
+    background:
+      radial-gradient(1100px 500px at 15% -8%, rgba(45,212,232,0.10), transparent 60%),
+      radial-gradient(900px 480px at 100% 0%, rgba(155,140,255,0.08), transparent 55%),
+      var(--bg);
+    min-height: 100%;
+  }
+
+  a{ color: var(--cyan); }
+
+  .wrap{ max-width: 1240px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ---------- Top bar ---------- */
+  header.top{
+    position: sticky; top: 0; z-index: 20;
+    padding-top: calc(18px + env(safe-area-inset-top, 0px));
+    padding-bottom: 16px;
+    background: linear-gradient(180deg, rgba(10,18,30,0.97), rgba(10,18,30,0.86) 70%, rgba(10,18,30,0));
+    backdrop-filter: blur(6px);
+  }
+  .top-inner{ max-width: 1240px; margin: 0 auto; padding: 0 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap: wrap; }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--font-mono); font-weight:600; font-size:14px; color:#08131F;
+    flex: none;
+  }
+  .brand-text h1{ margin:0; font-family: var(--font-head); font-weight:600; font-size: 17px; letter-spacing: 0.2px; }
+  .brand-text p{ margin: 1px 0 0; font-size: 12.5px; color: var(--muted); }
+
+  .status-pill{
+    display:flex; align-items:center; gap:8px;
+    padding: 7px 13px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 12.5px; color: var(--text);
+  }
+  .dot{ width:8px; height:8px; border-radius:50%; background: var(--green); box-shadow: 0 0 0 3px rgba(62,213,152,0.18); }
+  .dot.warn{ background: var(--amber); box-shadow: 0 0 0 3px rgba(253,179,78,0.2); }
+  .dot.crit{ background: var(--red); box-shadow: 0 0 0 3px rgba(255,107,107,0.2); }
+
+  /* ---------- Section headers ---------- */
+  .eyebrow{ font-family: var(--font-mono); font-size: 11.5px; color: var(--cyan); letter-spacing: 0.4px; margin: 0 0 6px; }
+  h2.section-title{ font-family: var(--font-head); font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .section-sub{ color: var(--muted); font-size: 13.5px; margin: 0 0 20px; max-width: 720px; line-height:1.55; }
+  section{ margin-top: 46px; }
+
+  /* ---------- KPI row ---------- */
+  .kpi-grid{ display:grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .kpi{
+    background: var(--panel); border:1px solid var(--border); border-radius: 12px;
+    padding: 16px 14px;
+  }
+  .kpi .val{ font-family: var(--font-head); font-size: 26px; font-weight: 700; color: var(--text); line-height:1.1; }
+  .kpi .lbl{ font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+  .kpi .val span.unit{ font-size: 13px; color: var(--muted-2); font-weight: 500; margin-left:2px; }
+
+  /* ---------- Two-column layout ---------- */
+  .grid-2{ display:grid; grid-template-columns: 1.05fr 1fr; gap: 20px; align-items: start; }
+
+  .card{
+    background: var(--panel); border:1px solid var(--border); border-radius: 14px;
+    padding: 20px;
+  }
+  .card h3{ margin:0 0 14px; font-family: var(--font-head); font-size:15px; font-weight:600; }
+
+  /* ---------- Architecture diagram ---------- */
+  .arch{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .master-box{
+    width: 100%; max-width: 360px; background: var(--panel-2); border:1px solid var(--cyan-dim);
+    border-radius: 10px; padding: 12px 16px; text-align:center;
+  }
+  .master-box .tag{ font-family: var(--font-mono); font-size: 11px; color: var(--cyan); letter-spacing: 0.5px; }
+  .master-box .desc{ font-size: 12px; color: var(--muted); margin-top:4px; }
+  .arch-connector{ width:1px; height: 18px; background: var(--border); }
+  .workers-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width:100%; }
+  .worker{
+    background: var(--panel-2); border:1px solid var(--border); border-radius: 10px;
+    padding: 10px 8px; text-align:center; position:relative; transition: all .35s ease;
+  }
+  .worker .wname{ font-family: var(--font-mono); font-size: 12px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px;}
+  .worker .wdesc{ font-size: 10.5px; color: var(--muted); margin-top: 4px; line-height:1.4; }
+  .worker.down{ opacity: 0.45; border-color: var(--red); background: rgba(255,107,107,0.06); }
+  .worker.down::after{ content:"HORS SERVICE"; position:absolute; inset:auto 0 6px 0; font-family:var(--font-mono); font-size:8.5px; color: var(--red); letter-spacing:0.4px; }
+  .hdfs-bar{
+    width:100%; background: linear-gradient(90deg, var(--cyan-dim), var(--violet)); border-radius: 10px;
+    padding: 10px 14px; text-align:center; font-family: var(--font-mono); font-size:12px; color:#eaf9fb; margin-top: 4px;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs{ display:flex; gap:6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab-btn{
+    font-family: var(--font-body); font-size: 12.5px; font-weight:600; color: var(--muted);
+    background: transparent; border:1px solid var(--border); border-radius: 999px;
+    padding: 6px 13px; cursor:pointer; transition: all .2s ease;
+  }
+  .tab-btn.active{ color:#06202A; background: var(--cyan); border-color: var(--cyan); }
+  .chart-wrap{ height: 260px; position:relative; }
+
+  /* ---------- Block placement grid ---------- */
+  .placement-table{ width:100%; border-collapse: collapse; font-size: 13px; }
+  .placement-table th{ text-align:left; font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-weight:500; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .placement-table td{ padding: 10px; border-bottom: 1px solid var(--border); }
+  .block-chip{ font-family: var(--font-mono); font-size:11.5px; font-weight:600; color: var(--violet); }
+  .node-chip{
+    display:inline-flex; align-items:center; gap:6px; font-family: var(--font-mono); font-size: 11.5px;
+    padding: 3px 9px; border-radius: 999px; background: var(--panel-2); border:1px solid var(--border); margin: 2px 3px 2px 0;
+  }
+  .node-chip .dot{ width:6px; height:6px; }
+  .node-chip.offline{ text-decoration: line-through; color: var(--muted-2); border-color: var(--border); opacity:.55; }
+
+  /* ---------- Failure sim panel ---------- */
+  .sim-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .node-picker{ display:grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom:16px; }
+  .node-btn{
+    font-family: var(--font-mono); font-size: 12.5px; font-weight:600; color: var(--text);
+    background: var(--panel-2); border:1px solid var(--border); border-radius: 10px;
+    padding: 12px 6px; cursor:pointer; transition: all .2s ease; text-align:center;
+  }
+  .node-btn:hover{ border-color: var(--cyan-dim); }
+  .node-btn.selected{ border-color: var(--red); background: rgba(255,107,107,0.10); color: var(--red); }
+  .btn-row{ display:flex; gap:10px; margin-bottom: 18px; flex-wrap:wrap; }
+  .btn{
+    font-family: var(--font-body); font-weight:600; font-size:13px; border-radius: 9px; padding: 10px 16px;
+    cursor:pointer; border:1px solid transparent; transition: all .2s ease;
+  }
+  .btn-primary{ background: var(--cyan); color:#06202A; }
+  .btn-primary:hover{ filter: brightness(1.08); }
+  .btn-ghost{ background: transparent; color: var(--text); border-color: var(--border); }
+  .btn-ghost:hover{ border-color: var(--cyan-dim); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .result-banner{
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; border:1px solid var(--border);
+    background: var(--panel-2); display:flex; align-items:flex-start; gap:14px;
+  }
+  .result-banner .num{ font-family: var(--font-head); font-size: 30px; font-weight:700; line-height:1; }
+  .result-banner .num.ok{ color: var(--green); }
+  .result-banner .num.bad{ color: var(--red); }
+  .result-banner .rtext{ font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height:1.5; max-width: 420px;}
+
+  .rep-toggle{ display:flex; align-items:center; gap:10px; font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
+  .switch{ position:relative; width: 42px; height: 22px; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{ position:absolute; inset:0; background: var(--panel-2); border:1px solid var(--border); border-radius: 999px; cursor:pointer; transition:.2s; }
+  .slider::before{ content:""; position:absolute; width:16px; height:16px; left:2px; top:2px; background: var(--muted); border-radius:50%; transition:.2s; }
+  input:checked + .slider{ background: rgba(45,212,232,0.18); border-color: var(--cyan-dim); }
+  input:checked + .slider::before{ transform: translateX(20px); background: var(--cyan); }
+
+  .method-list{ margin:0; padding-left: 18px; font-size: 12.5px; color: var(--muted); line-height:1.8; }
+  .method-list b{ color: var(--text); }
+
+  /* ---------- Footer ---------- */
+  footer{ margin-top: 60px; padding-top: 22px; border-top:1px solid var(--border); display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .pipeline-chip-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .pchip{ font-family: var(--font-mono); font-size:11.5px; background: var(--panel); border:1px solid var(--border); border-radius:8px; padding:6px 10px; color: var(--muted); }
+  .arrow{ color: var(--muted-2); font-size:12px; }
+  footer .note{ font-size: 11.5px; color: var(--muted-2); }
+
+  @media (max-width: 880px){
+    .grid-2, .sim-grid{ grid-template-columns: 1fr; }
+    .kpi-grid{ grid-template-columns: repeat(2, 1fr); }
+    .workers-row, .node-picker{ grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="brand-mark">B4</div>
+      <div class="brand-text">
+        <h1>Cluster Big Data — Ventes Retail 2024</h1>
+        <p>Systèmes Répartis pour le Big Data — Dashboard du projet</p>
+      </div>
+    </div>
+    <div class="status-pill">
+      <span class="dot" id="cluster-dot"></span>
+      <span id="cluster-status-text">Cluster opérationnel — 4/4 nœuds</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- KPI STRIP -->
+  <section style="margin-top:8px;">
+    <div class="kpi-grid">
+      <div class="kpi"><div class="val">8 000</div><div class="lbl">Enregistrements</div></div>
+      <div class="kpi"><div class="val">11</div><div class="lbl">Attributs</div></div>
+      <div class="kpi"><div class="val">4</div><div class="lbl">Nœuds workers</div></div>
+      <div class="kpi"><div class="val">x3</div><div class="lbl">Facteur de réplication</div></div>
+      <div class="kpi"><div class="val">7</div><div class="lbl">Catégories de produits</div></div>
+      <div class="kpi"><div class="val">7</div><div class="lbl">Régions (Tunisie)</div></div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE + DATA DISTRIBUTION -->
+  <section>
+    <p class="eyebrow">ARCHITECTURE &amp; DONNÉES</p>
+    <h2 class="section-title">Architecture retenue et répartition des données</h2>
+    <p class="section-sub">Cluster simulé à 4 workers (local[4]) avec stockage distribué HDFS, orchestré par un driver Spark faisant office de nœud maître.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Architecture du cluster</h3>
+        <div class="arch">
+          <div class="master-box">
+            <div class="tag">MASTER NODE</div>
+            <div class="desc">NameNode · ResourceManager · Spark Driver</div>
+          </div>
+          <div class="arch-connector"></div>
+          <div class="workers-row" id="arch-workers">
+            <!-- filled by JS -->
+          </div>
+          <div class="hdfs-bar">HDFS — blocs répartis et répliqués sur les 4 workers</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Répartition du chiffre d'affaires</h3>
+        <div class="tabs" id="chart-tabs">
+          <button class="tab-btn active" data-chart="category">Catégorie</button>
+          <button class="tab-btn" data-chart="region">Région</button>
+          <button class="tab-btn" data-chart="channel">Canal</button>
+          <button class="tab-btn" data-chart="monthly">Mensuel</button>
+        </div>
+        <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOCK PLACEMENT -->
+  <section>
+    <p class="eyebrow">STOCKAGE DISTRIBUÉ</p>
+    <h2 class="section-title">Placement des blocs et des répliques (HDFS)</h2>
+    <p class="section-sub">Les 8 000 lignes sont réparties en 4 blocs logiques (~2 000 lignes chacun), chacun répliqué 3 fois sur des nœuds différents — placement en rotation circulaire, comme le ferait un vrai NameNode.</p>
+    <div class="card">
+      <table class="placement-table">
+        <thead>
+          <tr><th>Bloc</th><th>Lignes</th><th>Nœuds hébergeant une réplique</th></tr>
+        </thead>
+        <tbody id="placement-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FAILURE SIMULATION -->
+  <section>
+    <p class="eyebrow">TOLÉRANCE AUX PANNES</p>
+    <h2 class="section-title">Simulation d'une panne de nœud — méthode et analyse</h2>
+    <p class="section-sub">Choisissez un nœud à mettre en panne pour observer, en direct, l'effet de la réplication sur la disponibilité des données — reproduit à l'identique dans le notebook (section 12).</p>
+
+    <div class="card">
+      <div class="sim-grid">
+        <div>
+          <div class="node-picker" id="node-picker"></div>
+          <div class="rep-toggle">
+            <label class="switch">
+              <input type="checkbox" id="replication-toggle" checked>
+              <span class="slider"></span>
+            </label>
+            <span>Réplication activée (facteur = 3) — désactiver pour comparer sans redondance</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="btn-fail">Simuler la panne</button>
+            <button class="btn btn-ghost" id="btn-reset">Réinitialiser le cluster</button>
+          </div>
+          <ol class="method-list">
+            <li><b>1.</b> Sélectionner un nœud (ou plusieurs) et cliquer sur « Simuler la panne ».</li>
+            <li><b>2.</b> Le nœud est marqué hors service dans l'architecture ci-dessus et dans la table des blocs.</li>
+            <li><b>3.</b> Pour chaque bloc affecté, le système cherche une réplique survivante.</li>
+            <li><b>4.</b> Le taux de disponibilité des données est recalculé en direct.</li>
+          </ol>
+        </div>
+        <div>
+          <div class="result-banner">
+            <div>
+              <div class="num ok" id="availability-num">100%</div>
+              <div class="rtext" id="availability-text">Toutes les données restent disponibles. Aucune perte détectée.</div>
+            </div>
+          </div>
+          <table class="placement-table">
+            <thead><tr><th>Bloc</th><th>Statut</th><th>Nœud utilisé pour la lecture</th></tr></thead>
+            <tbody id="sim-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="pipeline-chip-row">
+      <span class="pchip">Dataset CSV</span><span class="arrow">→</span>
+      <span class="pchip">HDFS (simulé)</span><span class="arrow">→</span>
+      <span class="pchip">Spark / PySpark</span><span class="arrow">→</span>
+      <span class="pchip">Résultats</span>
+    </div>
+    <div class="note">Systèmes Répartis pour le Big Data — Projet ventes retail · dashboard généré à partir des résultats du notebook</div>
+  </footer>
+
+</div>
+
+<script>
+// ============================================================
+// DATA (extrait des agrégations réelles du notebook PySpark)
+// ============================================================
+const DATA = {
+  category: {
+    labels: ["Électronique","Meubles","Vêtements","Sport","Alimentation","Jouets","Beauté"],
+    values: [2860680.60, 1072401.56, 419154.76, 279945.53, 157326.78, 148672.75, 113334.73],
+  },
+  region: {
+    labels: ["Tunis","Sfax","Sousse","Bizerte","Nabeul","Gabès","Kairouan"],
+    values: [1307503.60, 914987.03, 754781.98, 612336.24, 562268.36, 530279.41, 369360.09],
+  },
+  channel: {
+    labels: ["En ligne","Magasin"],
+    values: [2886962.41, 2164554.30],
+  },
+  monthly: {
+    labels: ["2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12"],
+    values: [429706.18,378867.14,390992.12,442659.82,423524.60,440803.76,390371.52,474710.73,414931.59,424123.73,430358.94,410466.58],
+  },
+};
+
+// Placement des répliques (identique au notebook : rotation circulaire, facteur = 3)
+const NODES = ["node1","node2","node3","node4"];
+const BLOCK_PLACEMENT = {
+  B1: ["node1","node2","node3"],
+  B2: ["node2","node3","node4"],
+  B3: ["node3","node4","node1"],
+  B4: ["node4","node1","node2"],
+};
+const BLOCK_PLACEMENT_NOREP = { B1:["node1"], B2:["node2"], B3:["node3"], B4:["node4"] };
+const LINES_PER_BLOCK = 2000;
+
+let downNodes = new Set();
+let replicationOn = true;
+
+// ============================================================
+// CHART
+// ============================================================
+const ctx = document.getElementById('mainChart').getContext('2d');
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#8CA3B8';
+
+const palette = ['#2DD4E8','#9B8CFF','#3ED598','#FDB34E','#FF6B6B','#4FD1FF','#C9A6FF'];
+
+let mainChart;
+function renderChart(key){
+  const d = DATA[key];
+  const isLine = key === 'monthly';
+  const cfg = {
+    type: isLine ? 'line' : 'bar',
+    data: {
+      labels: d.labels,
+      datasets: [{
+        label: "Chiffre d'affaires (TND)",
+        data: d.values,
+        backgroundColor: isLine ? 'rgba(45,212,232,0.15)' : d.labels.map((_,i)=>palette[i % palette.length]),
+        borderColor: isLine ? '#2DD4E8' : 'transparent',
+        borderWidth: isLine ? 2.5 : 0,
+        borderRadius: isLine ? 0 : 6,
+        fill: isLine,
+        tension: 0.35,
+        pointRadius: isLine ? 3 : 0,
+        pointBackgroundColor: '#2DD4E8',
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false },
+        tooltip:{ backgroundColor:'#0D1A2B', borderColor:'#22374F', borderWidth:1, titleColor:'#E7EEF5', bodyColor:'#8CA3B8', padding:10,
+          callbacks:{ label: (c)=> ' ' + c.formattedValue + ' TND' } } },
+      scales:{
+        x:{ grid:{ display:false, drawBorder:false }, ticks:{ font:{size:10.5}, maxRotation: key==='category'?20:0 } },
+        y:{ grid:{ color:'#182B41', drawBorder:false }, ticks:{ font:{size:10.5}, callback:(v)=> (v/1000)+'k' } }
+      }
+    }
+  };
+  if(mainChart) mainChart.destroy();
+  mainChart = new Chart(ctx, cfg);
+}
+renderChart('category');
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderChart(btn.dataset.chart);
+  });
+});
+
+// ============================================================
+// ARCHITECTURE DIAGRAM (nodes rendered from state)
+// ============================================================
+function renderArchWorkers(){
+  const el = document.getElementById('arch-workers');
+  el.innerHTML = NODES.map(n=>{
+    const down = downNodes.has(n);
+    return `<div class="worker ${down?'down':''}" data-node="${n}">
+      <div class="wname"><span class="dot ${down?'crit':''}" style="width:6px;height:6px;"></span>${n}</div>
+      <div class="wdesc">DataNode · NodeManager<br>Spark Worker</div>
+    </div>`;
+  }).join('');
+}
+renderArchWorkers();
+
+function updateClusterStatus(){
+  const alive = 4 - downNodes.size;
+  const dot = document.getElementById('cluster-dot');
+  const txt = document.getElementById('cluster-status-text');
+  if(downNodes.size === 0){
+    dot.className = 'dot'; txt.textContent = 'Cluster opérationnel — 4/4 nœuds';
+  } else {
+    dot.className = 'dot warn'; txt.textContent = `Mode dégradé — ${alive}/4 nœuds actifs`;
+  }
+}
+
+// ============================================================
+// BLOCK PLACEMENT TABLE
+// ============================================================
+function nodeChip(n, offline){
+  return `<span class="node-chip ${offline?'offline':''}"><span class="dot ${offline?'crit':''}" style="width:6px;height:6px;"></span>${n}</span>`;
+}
+function renderPlacementTable(){
+  const body = document.getElementById('placement-body');
+  body.innerHTML = Object.entries(BLOCK_PLACEMENT).map(([b, nodes])=>{
+    return `<tr>
+      <td><span class="block-chip">${b}</span></td>
+      <td>${LINES_PER_BLOCK.toLocaleString('fr-FR')}</td>
+      <td>${nodes.map(n=>nodeChip(n,false)).join('')}</td>
+    </tr>`;
+  }).join('');
+}
+renderPlacementTable();
+
+// ============================================================
+// NODE PICKER (failure simulation)
+// ============================================================
+let selectedNodes = new Set();
+function renderNodePicker(){
+  const el = document.getElementById('node-picker');
+  el.innerHTML = NODES.map(n=>{
+    const sel = selectedNodes.has(n);
+    const isDown = downNodes.has(n);
+    return `<button class="node-btn ${sel?'selected':''}" data-node="${n}" ${isDown?'disabled':''}>${n}${isDown?' ⓧ':''}</button>`;
+  }).join('');
+  el.querySelectorAll('.node-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const n = b.dataset.node;
+      if(selectedNodes.has(n)) selectedNodes.delete(n); else selectedNodes.add(n);
+      renderNodePicker();
+    });
+  });
+}
+renderNodePicker();
+
+document.getElementById('replication-toggle').addEventListener('change', (e)=>{
+  replicationOn = e.target.checked;
+  runSimulation();
+});
+
+document.getElementById('btn-fail').addEventListener('click', ()=>{
+  selectedNodes.forEach(n => downNodes.add(n));
+  selectedNodes.clear();
+  renderArchWorkers();
+  renderNodePicker();
+  updateClusterStatus();
+  runSimulation();
+});
+
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  downNodes.clear();
+  selectedNodes.clear();
+  renderArchWorkers();
+  renderNodePicker();
+  updateClusterStatus();
+  runSimulation();
+});
+
+function runSimulation(){
+  const placement = replicationOn ? BLOCK_PLACEMENT : BLOCK_PLACEMENT_NOREP;
+  const simBody = document.getElementById('sim-body');
+  let totalLignes = 0;
+  let rows = '';
+
+  Object.entries(placement).forEach(([b, nodes])=>{
+    const survivor = nodes.find(n => !downNodes.has(n));
+    if(survivor){
+      totalLignes += LINES_PER_BLOCK;
+      const isPrimary = survivor === nodes[0];
+      rows += `<tr>
+        <td><span class="block-chip">${b}</span></td>
+        <td style="color:var(--green)">✓ ${isPrimary ? 'OK (réplique primaire)' : 'OK (réplique de secours)'}</td>
+        <td>${nodeChip(survivor, false)}</td>
+      </tr>`;
+    } else {
+      rows += `<tr>
+        <td><span class="block-chip">${b}</span></td>
+        <td style="color:var(--red)">✕ Perte de données</td>
+        <td>—</td>
+      </tr>`;
+    }
+  });
+  simBody.innerHTML = rows;
+
+  const pct = Math.round((totalLignes / 8000) * 100);
+  const numEl = document.getElementById('availability-num');
+  const textEl = document.getElementById('availability-text');
+  numEl.textContent = pct + '%';
+  numEl.className = 'num ' + (pct === 100 ? 'ok' : 'bad');
+
+  if(downNodes.size === 0){
+    textEl.textContent = "Toutes les données restent disponibles. Aucune perte détectée.";
+  } else if(pct === 100){
+    textEl.textContent = `Panne de ${[...downNodes].join(', ')} absorbée grâce à la réplication (facteur = 3). 0% de perte de données.`;
+  } else {
+    textEl.textContent = `Sans réplique de secours disponible, la panne de ${[...downNodes].join(', ')} entraîne une perte de ${100-pct}% des données.`;
+  }
+}
+
+updateClusterStatus();
+runSimulation();
+</script>
+
+</body>
+</html>
